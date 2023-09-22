@@ -1,0 +1,68 @@
+from google.colab import files
+import pandas as pd
+import io
+
+uploaded = files.upload()
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
+import numpy as np
+
+df = pd.read_csv(io.BytesIO(uploaded['CHL5230-F23-Datathon #1-Dataset1.csv']))
+
+#Descriptives#
+print(df.head())
+print(df.shape)
+print(df.describe())
+print(df.isnull().sum()) #No missing data
+
+#Re-encode Gender#
+df['Gender'] = df['Gender'].replace({'Male':0, 'Female':1})
+
+#Create new categorical variable for BMI#
+conditions = [
+    df['BMI'] < 18.5,
+    (df['BMI'] >= 18.5) & (df['BMI'] < 25),
+    (df['BMI'] >= 25) & (df['BMI'] < 30),
+    (df['BMI'] >= 30)
+]
+
+labels = ['Underweight', 'Normal Weight', 'Overweight', 'Obese']
+
+#Use np.select to apply conditions and assign labels
+df['BMI_category'] = np.select(conditions, labels, default='Undefined')
+
+print(df.head())
+
+#Prediction#
+X = df[['Age', 'Gender', 'Physical_Activity', 'Sugar_Intake', 'Fast_Food_Frequency']]
+y = df['BMI_category']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state=28)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+knn = KNeighborsClassifier(n_neighbors=3)
+knn.fit(X_train, y_train)
+y_pred = knn.predict(X_test)
+
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
+
+#Plot Confusion Matrix#
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+classes = df['BMI_category'].unique()
+
+plt.figure(figsize=(7,5))
+sns.heatmap(confusion_matrix(y_test, y_pred, labels=classes), cmap="Reds", annot=True, fmt='g', xticklabels=classes, yticklabels=classes)
+plt.xlabel('Predicted')
+plt.ylabel('Observed')
+plt.title('Confusion Matrix')
+plt.show()
