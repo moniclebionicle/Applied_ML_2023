@@ -38,6 +38,36 @@ df['BMI_category'] = np.select(conditions, labels, default='Undefined')
 print(df.head())
 
 #Prediction#
+X = df[['Age', 'Gender','Physical_Activity', 'Sugar_Intake', 'Fast_Food_Frequency']]
+y = df['BMI_category']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state=28)
+
+k_values = range(1,15)
+
+errors = []
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+for k in k_values:
+  knn = KNeighborsClassifier(n_neighbors=k)
+  knn.fit(X_train, y_train)
+  y_pred = knn.predict(X_test)
+  error = 1 - accuracy_score(y_test, y_pred)
+  errors.append(error)
+
+#Plot Error Rate vs. K-value
+plt.figure(figsize=(12,6))
+plt.plot(k_values, errors, marker="o")
+plt.title("Error Rate vs. K value")
+plt.xlabel("K")
+plt.ylabel("Error Rate")
+plt.grid(True)
+plt.show()
+
+#Shows K=2 is optimal
 X = df[['Age', 'Gender', 'Physical_Activity', 'Sugar_Intake', 'Fast_Food_Frequency']]
 y = df['BMI_category']
 
@@ -47,7 +77,7 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-knn = KNeighborsClassifier(n_neighbors=3)
+knn = KNeighborsClassifier(n_neighbors=2)
 knn.fit(X_train, y_train)
 y_pred = knn.predict(X_test)
 
