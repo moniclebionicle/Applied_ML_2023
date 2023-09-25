@@ -1,3 +1,4 @@
+####IMPORT FILE AND LOAD APPROPRIATE LIBRARIES####
 from google.colab import files
 import pandas as pd
 import io
@@ -8,21 +9,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report, confusion_matrix
-
 import numpy as np
 
 df = pd.read_csv(io.BytesIO(uploaded['CHL5230-F23-Datathon #1-Dataset1.csv']))
 
-#Descriptives#
+####BASIC DESCRIPTIVES OF DATA####
 print(df.head())
 print(df.shape)
 print(df.describe())
 print(df.isnull().sum()) #No missing data
 
-#Re-encode Gender#
+####RE-ENCODE GENDER####
 df['Gender'] = df['Gender'].replace({'Male':0, 'Female':1})
 
-#Create new categorical variable for BMI#
+####CREATE NEW CATEGORICAL VARIABLE FOR BMI####
 conditions = [
     df['BMI'] < 18.5,
     (df['BMI'] >= 18.5) & (df['BMI'] < 25),
@@ -32,18 +32,18 @@ conditions = [
 
 labels = ['Underweight', 'Normal Weight', 'Overweight', 'Obese']
 
-#Use np.select to apply conditions and assign labels
-df['BMI_category'] = np.select(conditions, labels, default='Undefined')
+df['BMI_category'] = np.select(conditions, labels, default='Undefined') #Apply conditions and assign labels
 
 print(df.head())
 
-#Prediction#
+####PREDICTION####
 X = df[['Age', 'Gender','Physical_Activity', 'Sugar_Intake', 'Fast_Food_Frequency']]
 y = df['BMI_category']
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state=28)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state=28) #Common training and testing split 70/30
 
-k_values = range(1,15)
+####ELBOW METHOD TO FIND OPTIMAL K####
+k_values = range(1,50)
 
 errors = []
 
@@ -58,16 +58,15 @@ for k in k_values:
   error = 1 - accuracy_score(y_test, y_pred)
   errors.append(error)
 
-#Plot Error Rate vs. K-value
 plt.figure(figsize=(12,6))
 plt.plot(k_values, errors, marker="o")
 plt.title("Error Rate vs. K value")
 plt.xlabel("K")
 plt.ylabel("Error Rate")
 plt.grid(True)
-plt.show()
+plt.show() #Shows K = 2 is optimal
 
-#Shows K=2 is optimal
+####PREDICTION USING K=2####
 X = df[['Age', 'Gender', 'Physical_Activity', 'Sugar_Intake', 'Fast_Food_Frequency']]
 y = df['BMI_category']
 
@@ -84,7 +83,7 @@ y_pred = knn.predict(X_test)
 print(confusion_matrix(y_test, y_pred))
 print(classification_report(y_test, y_pred))
 
-#Plot Confusion Matrix#
+####PLOT CONFUSION MATRIX####
 import seaborn as sns
 import matplotlib.pyplot as plt
 
